@@ -9,7 +9,7 @@ trait ManagesMediaTrait {
 	 * @param array $query
 	 */
 	public function updateMedia($mediaColumnName, $query = array()) {
-		$updatedMedia = MediaManager::updateMedia($this->getMedia($mediaColumnName), $query);
+		$updatedMedia = MediaManager::updateMedia($this->getMedia($mediaColumnName), $query, $mediaColumnName, isset($this->mediaRootPath) ? $this->mediaRootPath : null);
 		$this->attributes[$mediaColumnName] = MediaManager::serialize($updatedMedia);
 	}
 
@@ -18,13 +18,6 @@ trait ManagesMediaTrait {
 	public function removeMedia($mediaColumnName) {
 		MediaManager::removeMedia($this->getMedia($mediaColumnName));
 		$this->attributes[$mediaColumnName] = null;
-	}
-
-
-
-	public function setMedia($mediaColumnName, $query) {
-		MediaManager::removeMedia($this->getMedia($mediaColumnName));
-		$this->updateMedia($mediaColumnName, $query);
 	}
 
 

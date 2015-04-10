@@ -1,7 +1,7 @@
 <?php namespace App\Duxon\Respository\Traits;
 
 
-trait HasRepositoryBasics {
+trait BasicRepositoryTrait {
 
 	protected $model;
 

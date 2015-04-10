@@ -2,6 +2,7 @@
 
 class MediaManager {
 
+
 	/**
 	 * @param $media
 	 * @return string
@@ -28,9 +29,9 @@ class MediaManager {
 	 * @return array
 	 * @throws \MediaManagerException
 	 */
-	public static function updateMedia($media, $query) {
+	public static function updateMedia($media, $query, $mediaName = null, $mediaRootDirPath = null) {
 		$media = $media ?: [];
-
+		
 		foreach ((array) $query as $medium) {
 			if (is_array($medium)) {
 				if (!isset($medium["action"]))
@@ -38,7 +39,10 @@ class MediaManager {
 
 				switch ($medium["action"]) {
 					case "store":
-						$media[] = self::storeMedium($medium["url"], isset($medium["name"]) ? $medium["name"] : uniqid());
+						$mediaDirPath = ( $mediaRootDirPath ?: config("media_manager.upload_path", "public/data/uploads") ) . ( $mediaName ? '/' . $mediaName : '' );
+						$fileName = isset($medium["name"]) ? $medium["name"] : uniqid();
+						$medium = self::storeMedium($medium["url"], $mediaDirPath, $fileName);
+						$media[] = $medium;
 						break;
 
 					case "remove":
@@ -58,7 +62,6 @@ class MediaManager {
 				$media[] = self::storeMedium($medium, uniqid());
 			}
 		}
-
 		return $media;
 	}
 
@@ -66,6 +69,7 @@ class MediaManager {
 
 	public static function removeMedia($media) {
 		foreach ((array) $media as $medium) {
+
 			if (file_exists($medium->url)) {
 				$fileDirPath = dirname($medium->url);
 
@@ -134,18 +138,18 @@ class MediaManager {
 	 * @param $fileName
 	 * @return null|string
 	 */
-	protected static function getUniqFilePath($fileName) {
+	protected static function getUniqFilePath($dirPath, $fileName) {
 		$uniqid = uniqid();
 
 		$fileName = $uniqid . "-" . $fileName;
-		$fileDirPath = self::getUploadDirPath() . "/" . substr($uniqid, 0, 1) . "/" . substr($uniqid, 1, 1);
+//		$dirPath = $dirPath . "/" . substr($uniqid, 0, 1) . "/" . substr($uniqid, 1, 1);
 		$filePath = null;
 
 		$fileNameInfo = pathinfo($fileName);
 
 		$postfixIterator = 1;
 
-		while (file_exists(($filePath = $fileDirPath . "/" . $fileNameInfo["filename"] . ($postfixIterator > 1 ? "-" . $postfixIterator : "") . (isset($fileNameInfo["extension"]) ? "." . $fileNameInfo["extension"] : ""))))
+		while (file_exists(($filePath = $dirPath . "/" . $fileNameInfo["filename"] . ($postfixIterator > 1 ? "-" . $postfixIterator : "") . (isset($fileNameInfo["extension"]) ? "." . $fileNameInfo["extension"] : ""))))
 			$postfixIterator++;
 
 		return $filePath;
@@ -161,7 +165,7 @@ class MediaManager {
 	 * @return \stdClass
 	 * @throws \MediaManagerException
 	 */
-	protected static function storeMedium($urlOrDataUrl, $fileName = null) {
+	protected static function storeMedium($urlOrDataUrl, $dirPath, $fileName = null) {
 		if (filter_var($urlOrDataUrl, FILTER_VALIDATE_URL)) {
 			$ch = curl_init();
 			curl_setopt($ch, CURLOPT_URL, $urlOrDataUrl);
@@ -198,7 +202,7 @@ class MediaManager {
 			throw new MediaManagerException("unable to process file from given source: " . (string)$urlOrDataUrl);
 		}
 
-		$filePath = self::getUniqFilePath($fileName);
+		$filePath = self::getUniqFilePath($dirPath, $fileName);
 		$fileDirPath = dirname($filePath);
 
 		if (!is_dir($fileDirPath))

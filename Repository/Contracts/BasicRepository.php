@@ -1,6 +1,6 @@
 <?php namespace App\Duxon\Respository\Contracts;
 
-interface Repository {
+interface BasicRepository {
 
 	/**
 	 * Get all models
@@ -29,7 +29,7 @@ interface Repository {
 	 * @param array $input
 	 * @return mixed
 	 */
-	public function updateOrCreate(array $input = array());
+	public function store(array $input = array());
 
 
 

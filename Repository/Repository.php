@@ -1,7 +1,7 @@
 <?php namespace App\Duxon\Respository;
 
 
-use App\Duxon\Respository\Contracts\Repository as RepositoryContract;
+use App\Duxon\Respository\Contracts\BasicRepository as RepositoryContract;
 
 abstract class Repository implements RepositoryContract {
 
@@ -26,7 +26,7 @@ abstract class Repository implements RepositoryContract {
 
 
 	public function all(array $with = array()) {
-		return $this->model->with($with)->all();
+		return $this->model->with($with)->get();
 	}
 
 
@@ -37,16 +37,34 @@ abstract class Repository implements RepositoryContract {
 
 
 
-	public function updateOrCreate(array $input = array()) {
+	protected function beforeStore($model) {
+
+	}
+
+
+
+	public function store(array $input = array()) {
 		$model = $this->model->findOrNew($this->getKeyFromInput($input))->fill($input);
+
+		$this->beforeStore($model);
 
 		return $model->save() ? $model : false;
 	}
 
 
 
+	protected function beforeDestroy($model) {
+
+	}
+
+
+
 	public function destroy($id) {
-		return $this->model->destroy($id);
+		$model = $this->find($id);
+
+		$this->beforeDestroy($model);
+
+		return $model->delete();
 	}
 
 }
